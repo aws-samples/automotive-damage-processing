@@ -99,9 +99,13 @@ aws s3 cp /path/to/source/folder/valid/ s3://{source-bucket-name} --recursive --
 In this step, the task which will be ingesting the content from the source s3 bucket will be initiated. In order to do that run the following sequence of commands.
 
 ```
-aws ssm get-parameters --names /car-repair/security-group --query 'Parameters[0].Value'
-aws ssm get-parameters --names /car-repair/subnet --profile --query 'Parameters[0].Value' 
+aws ssm get-parameters --names /car-repair/security-group --query 'Parameters[0].Value' --region us-west-2
+aws ssm get-parameters --names /car-repair/subnet --query 'Parameters[0].Value' --region us-west-2
 ```
+
+> [!NOTE] 
+> Remember to adjust the --region parameter on the command to match the region the solution has been deployed at
+
 
 These two commands above will retrieve the id for the subnet and the security groups that are required for the next command. 
 Copy the command below and before running it, replace the '**security-group-id**' and '**subnet-id**' with the respective values retrieved in the previous commands and then run the command.
