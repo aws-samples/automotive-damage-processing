@@ -126,7 +126,7 @@ After the task is finished loading the data into OpenSearch, accessing the infer
 
 From the data set downloaded on step 2, there is a test folder. This folder has random images which can be used for testing the solution. Follow the steps below in order to see the results in the UI.
 
-1. In the UI, take the following actions and load the any of the images from the test data set:
+1. In the UI, take the following actions and load the any of the images from the test folder from the repository downloaded on step 2:
 
 2. On the left side of the UI, choose the parameters, Make, model, area of the damage, type of damage, the severity and how many matches you want to find from the Vector Database.
 
@@ -143,9 +143,9 @@ In this example, image was loaded, and 3 matches were found.
 
 ![Test1_Results](/static_assets/test_2_example.png)
 
-5. As the image above shows, changing the parameters, but loading the same image, provided different results. The search matched with the same images but the accuracy is different. This indicates that the parameters chosen were closer to the metadata of the ingested images, thus influencing the vector created on the ingestion process.
+5. As the image above shows, changing the parameters, but loading the same image, provided different results. The search matched with the same images but the accuracy is different. This indicates that the parameters chosen were closer to the metadata of the ingested images, thus influencing the vector created on the inference process.
 
-6. Play around with the images in the 'test_data_set' folder, or even try some images from the data set we loaded into the Vector DB.
+6. Play around with the images in the test folder, or even try some images from the data set we loaded into the Vector DB.
 
 7. Under the image upload button, there will be the JSON metadata created by Claude for the metadata stored in OpenSearch alongside the vector. We can use that to compare how the images were ingested and how close the metadatas are.
 
