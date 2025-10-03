@@ -96,11 +96,11 @@ aws s3 cp /path/to/source/folder/valid/ s3://{source-bucket-name} --recursive --
 
 ## Step 4: Run Ingestion Task
 
-In this step, the task which will be ingesting the content from the source s3 bucket will be initiated. In order to do that run the following sequence of commands.
+In this step, the task which will be ingesting the content from the source s3 bucket will be initiated. In order to do that run the following sequence of commands. Replace "REGION" with the respective region where the solution was deployed.
 
 ```
-aws ssm get-parameters --names /car-repair/security-group --query 'Parameters[0].Value' --region us-west-2
-aws ssm get-parameters --names /car-repair/subnet --query 'Parameters[0].Value' --region us-west-2
+aws ssm get-parameters --names /car-repair/security-group --query 'Parameters[0].Value' --region REGION
+aws ssm get-parameters --names /car-repair/subnet --query 'Parameters[0].Value' --region REGION
 ```
 
 > [!NOTE] 

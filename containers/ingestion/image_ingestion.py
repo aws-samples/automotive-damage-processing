@@ -76,8 +76,19 @@ bedrock_client = session.client('bedrock-runtime', config=config)
 
 
 #Define function that will Create the JSON Metadata for the given damage image
-def create_json_metadata(encoded_image, instruction):
+def create_json_metadata(encoded_image, instruction, file_key):
     print('Sending JSON Creation Request to Bedrock Claude')
+    
+    # Detect image format from file extension
+    file_extension = file_key.lower().split('.')[-1]
+    if file_extension in ['jpg', 'jpeg']:
+        media_type = "image/jpeg"
+    elif file_extension == 'png':
+        media_type = "image/png"
+    else:
+        # Default to jpeg for unknown formats
+        media_type = "image/jpeg"
+    
     model = '<model>\
     { \
         "make": "XXXX",\
@@ -115,7 +126,7 @@ def create_json_metadata(encoded_image, instruction):
             "type": "image",
             "source": {
               "type": "base64",
-              "media_type": "image/png",
+              "media_type": media_type,
               "data": encoded_image
             }
           },
@@ -226,7 +237,7 @@ def ingest_image_s3(file_contents, start_index, end_index, client, file_key , os
     for file_key, file_binary in batch_files:
 
         encoded_image = base64.b64encode(file_binary).decode('utf-8')
-        json_text = create_json_metadata(encoded_image, instruction)
+        json_text = create_json_metadata(encoded_image, instruction, file_key)
         json_string = json.dumps(json_text)
         data_2 = json.loads(json_string)
         json_bytes = data_2.encode('utf-8')

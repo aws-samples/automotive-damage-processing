@@ -1,6 +1,43 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Creates an ECR repository, CodeBuild project, and IAM role
 
+Mappings:
+  CloudFrontPrefixLists:
+    us-east-1:
+      PrefixListId: pl-3b927c52
+    us-east-2:
+      PrefixListId: pl-b6a144df
+    us-west-1:
+      PrefixListId: pl-4ea04527
+    us-west-2:
+      PrefixListId: pl-82a045eb
+    ap-south-1:
+      PrefixListId: pl-9aa247f3
+    ap-northeast-1:
+      PrefixListId: pl-58a04531
+    ap-northeast-2:
+      PrefixListId: pl-22a6434b
+    ap-northeast-3:
+      PrefixListId: pl-31a14458
+    ap-southeast-1:
+      PrefixListId: pl-31a34658
+    ap-southeast-2:
+      PrefixListId: pl-b8a742d1
+    ca-central-1:
+      PrefixListId: pl-38a64351
+    eu-central-1:
+      PrefixListId: pl-a3a144ca
+    eu-west-1:
+      PrefixListId: pl-4fa04526
+    eu-west-2:
+      PrefixListId: pl-93a247fa
+    eu-west-3:
+      PrefixListId: pl-75b1541c
+    eu-north-1:
+      PrefixListId: pl-fab65393
+    sa-east-1:
+      PrefixListId: pl-5da64334
+
 Resources:
 
   # ECR Repository
@@ -213,6 +250,22 @@ Resources:
       AvailabilityZone: !Select [1, !GetAZs '']
       CidrBlock: 10.0.1.0/24
 
+  # Private Subnet 1
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.2.0/24
+
+  # Private Subnet 2
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: 10.0.3.0/24
+
   # Route Table for Public Subnets
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -257,6 +310,47 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
+
+  # Private Route Table
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  # Associate Private Subnet 1 with Private Route Table
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  # Associate Private Subnet 2 with Private Route Table
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  # NAT Gateway EIP
+  NATGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # NAT Gateway
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  # Private Route to NAT Gateway
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
 
   # ECS Cluster
   ECSCluster:
@@ -308,12 +402,13 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
+          SourcePrefixListId: !FindInMap [CloudFrontPrefixLists, !Ref 'AWS::Region', PrefixListId]
       SecurityGroupEgress:
         - IpProtocol: -1
           FromPort: -1
           ToPort: -1
           CidrIp: 0.0.0.0/0
+
 
 
   # ALB Listener
@@ -472,12 +567,12 @@ Resources:
       DesiredCount: 1
       NetworkConfiguration:
         AwsVpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
             - !Ref SecurityGroup
           Subnets:
-            - !Ref PublicSubnet1
-            - !Ref PublicSubnet2
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
       LoadBalancers:
       - ContainerName: repair-cost-container
         ContainerPort: 8501
@@ -638,7 +733,7 @@ Resources:
     Properties:
       Name: "/car-repair/subnet"
       Type: String
-      Value: !Ref PublicSubnet1
+      Value: !Ref PrivateSubnet1
       
   SGIDParameter:  
     Type: AWS::SSM::Parameter
